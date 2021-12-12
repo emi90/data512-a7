@@ -1,0 +1,124 @@
+---
+title: "COVID19 Cases and Transportation Data in Montgomery County, MD"
+author: "Emily Yamauchi"
+date: "12/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(forecast)
+library(xts)
+```
+
+
+Explore relationships between COVID19 daily cases and transportation data in Montgomery County, MD
+
+## Public Transportation
+
+```{r loadTransit}
+
+transit = read.csv('data_clean/transit_data.csv')
+
+```
+
+
+#### Hypothesis 1: Bus ridership driven by COVID19 Cases  
+Mobility decisions are impacted by both sentiment and mandates. Bus ridership would decrease as cases increase, and increase as cases decrease. 
+
+
+```{r}
+
+plt <- ggplot(transit, aes(x=ravg_cases_pct, y=ravg_bus_pct)) + geom_point() + geom_smooth(method="lm", se=FALSE)
+plt + labs(y="Bus Ridership (Daily % Chg)", x="COVID19 Cases (Daily % Chg)", title="COVID19 Cases vs Bus Ridership (Daily % Change)", subtitle="Montgomery County, MD. Jun 2020 - Oct 2021")
+
+```
+
+
+```{r}
+
+m_bus = lm(ravg_bus_pct ~ ravg_cases_pct, data=transit)
+summary(m_bus)
+aov1 = aov(ravg_bus_pct ~ ravg_cases_pct, data = transit)
+
+
+```
+Linear regression to test linear effect of COVID19 cases on bus ridership is not significant- $p-$value=`r unlist(summary(aov1))["Pr(>F)1"]`  
+
+#### Hypothesis 2: Rail ridership driven by COVID19 Cases  
+Mobility decisions are impacted by both sentiment and mandates. Rail ridership would decrease as cases increase, and increase as cases decrease. 
+
+```{r}
+
+plt <- ggplot(transit, aes(x=ravg_cases_pct, y=ravg_rail_pct)) + geom_point() + geom_smooth(method="lm", se=FALSE)
+plt + labs(y="Rail Ridership (Daily % Chg)", x="COVID19 Cases (Daily % Chg)", title="COVID19 Cases vs Rail Ridership (Daily % Change)", subtitle="Montgomery County, MD. Jun 2020 - Oct 2021")
+
+```
+
+
+```{r }
+
+m_rail = lm(ravg_rail_pct ~ ravg_cases_pct, data=transit)
+summary(m_rail)
+aov2 = aov(ravg_rail_pct ~ ravg_cases_pct, data = transit)
+
+```
+
+Linear regression to test linear effect of COVID19 cases on rail ridership is not significant- $p-$value=`r unlist(summary(aov2))["Pr(>F)1"]`  
+
+#### Hypothesis 3: Transit ridership driven by COVID19 Cases  
+Mobility decisions are impacted by both sentiment and mandates. Bus and rail ridership would decrease as cases increase, and increase as cases decrease. 
+
+```{r}
+
+plt <- ggplot(transit, aes(x=ravg_cases_pct, y=ravg_all_pct)) + geom_point() + geom_smooth(method="lm", se=FALSE)
+plt + labs(y="Transit Ridership (Daily % Chg)", x="COVID19 Cases (Daily % Chg)", title="COVID19 Cases vs Transit Ridership (Daily % Change)", subtitle="Montgomery County, MD. Jun 2020 - Oct 2021")
+
+```
+
+```{r}
+
+m_all = lm(ravg_all_pct ~ ravg_cases_pct, data=transit)
+summary(m_all)
+aov3 = aov(ravg_all_pct ~ ravg_cases_pct, data = transit)
+
+```
+
+Linear regression to test linear effect of COVID19 cases on total transit ridership is not significant- $p-$value=`r unlist(summary(aov3))["Pr(>F)1"]`  
+
+
+## Collisions Data  
+
+```{r loadCollisions}
+
+crash = read.csv('data_clean/crashes_data.csv')
+
+case_pct2 = crash[,"cases_pct"]
+crash_pct = crash[,"crash_pct"]
+
+```
+
+#### Hypothesis 3: Transit ridership driven by COVID19 Cases  
+Similar to Hypothesis 1, where mobility decisions are impacted by both sentiment and mandates. With less drivers on the road, number of collisions would decrease as cases increase.
+
+```{r}
+
+plt <- ggplot(crash, aes(x=case_pct2, crash_pct)) + geom_point() + geom_smooth(method="lm", se=FALSE)
+plt + labs(y="Number of Collisions (Daily % Chg)", x="COVID19 Cases (Daily % Chg)", title="Collisions vs COVID19 Cases (Daily % Change)", subtitle="Montgomery County, MD. Jun 2020 - Aug 2021")
+
+```
+
+
+
+```{r}
+
+m_crash = lm(crash_pct ~ case_pct2, data=crash)
+summary(m_crash)
+aov5 = aov(crash_pct ~ case_pct2, data = crash)
+
+
+```
+
+Linear regression to test linear effect of COVID19 cases on collisions is not significant- $p-$value=`r unlist(summary(aov5))["Pr(>F)1"]`  
